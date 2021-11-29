@@ -1,8 +1,8 @@
-# Semantics Disentangling for Generalized Zero-shot Learning 
+# Semantics Disentangling for Generalized Zero-Shot Learning 
 
 This is the official implementation for paper 
 > Zhi Chen, Yadan Luo, Ruihong Qiu, Zi Huang, Jingjing Li, Zheng Zhang.  
-**Semantics Disentangling for Generalized Zero-shot Learning**  
+**Semantics Disentangling for Generalized Zero-Shot Learning**  
 _International Conference on Computer Vision (ICCV) 2021_.
 
 [Semantics Disentangling for Generalized Zero-shot Learning](https://arxiv.org/pdf/2101.07978.pdf)
