@@ -23,6 +23,11 @@ features disentangled by the proposed SDGZSL are more generalizable in tasks of 
 learning. 
 
 
+## TODO
+- Results on CUB with attributes
+- Results on FLO without normalization
+- Results on SUN
+
 ## Requirements
 The implementation runs on
 
