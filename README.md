@@ -30,8 +30,6 @@ Supplementary Experimental Results
 | Model      | AwA2 T1 |    u    |    s    |    H    | aPY T1  |    u    |    s    |    H    |CUB-EMB T1|  u     |    s    |    H    |CUB-ATT T1|   u    |    s    |    H    | 
 |------------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|
 | LFGAA [4]  |   68.1  |   27.0  |   93.4  |   41.9  |    -    |    -    |     -   |    -    |     -   |   -     |   -     |   -     |  67.6   |   36.2  |   80.9  |   50.0  |
-| DCN [5]    |   65.2  |   25.5  |   84.2  |   39.1  |   43.6  |   14.2  |   75.0  |   23.9  |     -   |   -     |   -     |   -     |  56.2   |   28.4  |   60.7  |   38.7  |
-| TCN [6]    |   71.2  |   61.2  |   65.8  |   63.4  |   38.9  |   24.1  |   64.0  |   35.1  |     -   |   -     |   -     |   -     |  59.5   |   52.6  |   52.0  |   52.3  |
 | DVBE [7]   |   -     |   63.6  |   70.8  |   67.0  |   -     |   32.6  |   58.3  |   41.8  |     -   |   -     |   -     |   -     |  -      |   53.2  |   60.2  |   56.5  |
 | DVBE* [7]  |   -     |   62.7  |   77.5  |   69.4  |   -     |   37.9  |   55.9  |   45.2  |     -   |   -     |   -     |   -     |  -      |   64.4  |   73.2  |   68.5  |
 |f-CLS WGAN[1]|  65.3  |   56.1  |   65.5  |   60.4  |   40.5  |   32.9  |   61.7  |   -     |     -   |   50.3  |  58.3   |   54.0  |  57.3   |   43.7  |   57.7  |   49.7  |
@@ -43,7 +41,6 @@ Supplementary Experimental Results
 | DLFZRL [12]|   70.3  |    -    |     -   |   60.9  |   46.7  |    -    |     -   |    38.5 |     -   |   -     |   -     |   -     |  61.8   |   -     |   -     |   51.9  |
 |TF-VAEGAN [13]| 72.2  |   59.8  |    75.1 |   66.6  |   -     |    -    |     -   |    -    |     -   |   -     |   -     |   -     |  64.9   |   52.8  |   64.7  |   58.1  |
 |TF-VAEGAN*[13]| 73.4  |   55.5  |    83.6 |   66.7  |   -     |    -    |     -   |    -    |     -   |   -     |   -     |   -     |  74.3   |   63.8  |   79.3  |   70.7  |
-| OCD-CVAE [14]| 71.3  |   59.5  |    73.4 |   65.7  |   -     |    -    |     -   |    -    |     -   |   -     |   -     |   -     |  60.3   |   44.8  |   59.9  |   51.3  |
 | E-PGN [15] | 73.4    |   52.6  |    83.5 |   64.6  |   -     |    -    |     -   |    -    |     72.4|   52.0  |   61.1  |   56.2  |   -     |   -     |   -     |   -     |
 | AGZSL [16] | 73.8    |   65.1  |    78.9 |   71.3  |   41.0  |    35.1 |   65.5  |    45.7 |     -   |   -     |   -     |   -     |  57.2   |   41.4  |   49.7  |   45.2  |
 | AGZSL*[16] | 76.4    |   52.6  |    86.5 |   76.8  |   43.7  |    36.2 |   58.6  |    44.8 |     -   |   -     |   -     |   -     |  77.2   |   69.2  |   76.4  |   72.6  |
@@ -55,8 +52,6 @@ Supplementary Experimental Results
 | Model      |FLO-GBU T1|    u   |    s    |    H    |FLO-EPGN T1|    u  |    s    |    H    |  SUN T1 |    u    |    s    |    H    |
 |------------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|
 | LFGAA [4]  |    -    |    -    |     -   |    -    |    -    |    -    |     -   |    -    | 61.5    |   18.5  |   40.0  |   25.3  |
-| DCN [5]    |    -    |    -    |     -   |    -    |    -    |    -    |     -   |    -    | 61.8    |   25.5  |   37.0  |   30.2  |
-| TCN [6]    |    -    |    -    |     -   |    -    |    -    |    -    |     -   |    -    | 61.5    |   31.2  |   37.3  |   34.0  |
 | DVBE [7]   |    -    |    -    |     -   |    -    |    -    |    -    |     -   |    -    | -       |   45.0  |   37.2  |   40.7  | 
 | DVBE* [7]  |    -    |    -    |     -   |    -    |    -    |    -    |     -   |    -    | -       |   44.1  |   41.6  |   42.8  | 
 |f-CLSWGAN[1]|   67.2  |   59.0  |   73.8  |   65.6  |    -    |    -    |     -   |    -    | 60.8    |   42.6  |   36.6  |   39.4  |
@@ -68,7 +63,6 @@ Supplementary Experimental Results
 | DLFZRL [12]|   -     |    -    |     -   |   -     |    -    |    -    |     -   |    -    | 61.3    |   -     |   -     |   42.5  |
 |TF-VAEGAN [13]| 70.8  |   62.5  |   84.1  |   71.7  |   -     |    -    |     -   |    -    | 66.0    |   45.6  |   40.7  |   43.0  |
 |TF-VAEGAN*[13]| 74.7  |   63.8  |   92.5  |   79.4  |   -     |    -    |     -   |    -    | 66.7    |   41.8  |   51.9  |   46.3  |
-| OCD-CVAE [14]| -     |   -     |   -     |   -     |   -     |    -    |     -   |    -    | 63.5    |   44.8  |   42.9  |   43.8  |
 | E-PGN [15] |   -     |   -     |   -     |   -     |   85.7  |    71.5 |   82.2  |    76.5 | -       |   -     |   -     |   -     |
 | AGZSL [16] |   -     |   -     |   -     |   -     |   82.7  |    63.5 |   94.0  |    75.7 | 63.3    |   29.9  |   40.2  |   34.3  |
 | AGZSL*[16] |   -     |   -     |   -     |   -     |   86.9  |    73.7 |   91.9  |    81.7 | 66.2    |   50.5  |   43.1  |   46.5  |
@@ -112,10 +106,6 @@ The APY fine-tuned features are extracted from us.
 
 [4] Y. Liu, et al. "Attribute attention for semantic disambiguation in zero-shot learning."  CVPR 2019.
 
-[5] S. Liu, et al. "Generalized zero-shot learning with deep calibration network." NeurIPS 2018.
-
-[6] H. Jiang, et al. "Transferable contrastive network for generalized zero-shot learning." ICCV 2019.
-
 [7] S. Min, et al. "Domain-aware visual bias eliminating for generalized zeroshot learning." CVPR 2020.
 
 [8] Z. Chen, et al, "CANZSL: Cycleconsistent adversarial networks for zero-shot learning from natural language,"  WACV, 2020.
@@ -129,8 +119,6 @@ The APY fine-tuned features are extracted from us.
 [12] B. Tong, et al. "Hierarchical disentanglement of discriminative latent features for zero-shot learning." CVPR, 2019.
 
 [13] S. Narayan, et al. "Latent embedding feedback and discriminative features for zero-shot classification." ECCV, 2020.
-
-[14] R. Keshari, et al. "Generalized zero-shot learning via over-complete distribution." CVPR, 2020.
 
 [15] Y. Yu, et al. "Episode-based prototype generating network for zero-shot learning." CVPR, 2020.
 
