@@ -82,7 +82,7 @@ Supplementary Experimental Results
 - Results on CUB with attributes
 - <del> Results on FLO without normalization </del>
 - Results on SUN
-
+- Release the code of supplementary experiments
 ## Requirements
 The implementation runs on
 
