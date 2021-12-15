@@ -7,25 +7,11 @@ _International Conference on Computer Vision (ICCV) 2021_.
 
 [Semantics Disentangling for Generalized Zero-shot Learning](https://arxiv.org/pdf/2101.07978.pdf)
 
-![](architecture.png)
-
-Abstract: Generalized zero-shot learning (GZSL) aims to classify samples under the assumption that some classes are not 
-observable during training. To bridge the gap between the seen and unseen classes, most GZSL methods attempt to associate 
-the visual features of seen classes with attributes or to generate unseen samples directly. Nevertheless, the visual 
-features used in the prior approaches do not necessarily encode semantically related information that the shared 
-attributes refer to, which degrades the model generalization to unseen classes. To address this issue, in this paper, 
-we propose a novel semantics disentangling framework for the generalized zero-shot learning task (SDGZSL), where the 
-visual features of unseen classes are firstly estimated by a conditional VAE and then factorized into semantic-consistent 
-and semantic-unrelated latent vectors. In particular, a total correlation penalty is applied to guarantee the independence 
-between the two factorized representations, and the semantic consistency of which is measured by the derived relation 
-network. Extensive experiments conducted on four GZSL benchmark datasets have evidenced that the semantic-consistent 
-features disentangled by the proposed SDGZSL are more generalizable in tasks of canonical and generalized zero-shot 
-learning. 
 
 ------------------------------
-Supplementary Experimental Results
+### Supplementary Experimental Results
 
-### In the paper, we followed the datasets provided in [15], in which the visual features in FLO dataset are normalized, and the semantic description of CUB dataset is the CNN-RNN sentence embeddings (1024D). We hereby provide extra comparison results on the visual features provided by GBU setting [17]. 
+In the paper, we followed the datasets provided in [15], in which the visual features in FLO dataset are normalized, and the semantic description of CUB dataset is the CNN-RNN sentence embeddings (1024D). We hereby provide extra comparison results on the visual features provided by GBU setting [17]. 
 
 | Model      | AwA2 T1 |    u    |    s    |    H    | aPY T1  |    u    |    s    |    H    |CUB-EMB T1|  u     |    s    |    H    |CUB-ATT T1|   u    |    s    |    H    | 
 |------------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|
@@ -77,6 +63,7 @@ Supplementary Experimental Results
 - <del> Results on FLO without normalization </del>
 - <del> Results on SUN </del>
 - Release the code of supplementary experiments
+
 ## Requirements
 The implementation runs on
 
