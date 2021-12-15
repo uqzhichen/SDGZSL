@@ -73,9 +73,9 @@ Supplementary Experimental Results
 
 
 ## TODO
-- Results on CUB with attributes
+- <del> Results on CUB with attributes </del>
 - <del> Results on FLO without normalization </del>
-- Results on SUN
+- <del> Results on SUN </del>
 - Release the code of supplementary experiments
 ## Requirements
 The implementation runs on
