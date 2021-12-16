@@ -4,6 +4,7 @@ import json
 import argparse
 import os
 import random
+import math
 from time import gmtime, strftime
 from models import *
 from dataset_GBU import FeatDataLayer, DATA_LOADER
@@ -12,45 +13,49 @@ from sklearn.metrics.pairwise import cosine_similarity
 import torch.backends.cudnn as cudnn
 import classifier
 
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default='CUB', help='dataset: CUB, AWA1, APY, FLO')
+parser.add_argument('--dataset', default='SUN',help='dataset: CUB, AWA2, APY, FLO, SUN')
 parser.add_argument('--dataroot', default='./SDGZSL_data', help='path to dataset')
-parser.add_argument('--validation', action='store_true', default=False, help='enable cross validation mode')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument('--image_embedding', default='res101', type=str)
 parser.add_argument('--class_embedding', default='att', type=str)
-parser.add_argument('--finetune', type=bool, default=True, help='Use fine-tuned feature')
 
 parser.add_argument('--gen_nepoch', type=int, default=400, help='number of epochs to train for')
+parser.add_argument('--lr', type=float, default=0.0001, help='learning rate to train generater')
 
-parser.add_argument('--ae_lr', type=float, default=0.0001, help='learning rate to train generater')
-parser.add_argument('--lr', type=float, default=0.0001, help='learning rate to train generater') #0.0001
-
-parser.add_argument('--mse', type=float, default=5.0, help='mse weight')
-parser.add_argument('--ga', type=float, default=0.1, help='relationNet weight')
+parser.add_argument('--zsl', type=bool, default=False, help='Evaluate ZSL or GZSL')
+parser.add_argument('--finetune', type=bool, default=False, help='Use fine-tuned feature')
+parser.add_argument('--ga', type=float, default=15, help='relationNet weight')
 parser.add_argument('--beta', type=float, default=1, help='tc weight')
-parser.add_argument('--weight_decay', type=float, default=1e-5, help='weight_decay')
-parser.add_argument('--dis', type=float, default=0.3, help='')
+parser.add_argument('--weight_decay', type=float, default=1e-6, help='weight_decay')
+parser.add_argument('--dis', type=float, default=3, help='Discriminator weight')
+parser.add_argument('--dis_step', type=float, default=2, help='Discriminator update interval')
+parser.add_argument('--kl_warmup', type=float, default=0.01, help='kl warm-up for VAE')
+parser.add_argument('--tc_warmup', type=float, default=0.001, help='tc warm-up')
+
+parser.add_argument('--vae_dec_drop', type=float, default=0.5, help='dropout rate in the VAE decoder')
+parser.add_argument('--vae_enc_drop', type=float, default=0.4, help='dropout rate in the VAE encoder')
+parser.add_argument('--ae_drop', type=float, default=0.2, help='dropout rate in the auto-encoder')
 
 parser.add_argument('--classifier_lr', type=float, default=0.001, help='learning rate to train softmax classifier')
+parser.add_argument('--classifier_steps', type=int, default=50, help='training steps of the classifier')
+
 parser.add_argument('--batchsize', type=int, default=64, help='input batch size')
 parser.add_argument('--nSample', type=int, default=1200, help='number features to generate per class')
-parser.add_argument('--nv', type=int, default=64, help='number features to generate per class')
 
-parser.add_argument('--disp_interval', type=int, default=50)
+parser.add_argument('--disp_interval', type=int, default=200)
 parser.add_argument('--save_interval', type=int, default=10000)
-parser.add_argument('--evl_interval',  type=int, default=50)
-parser.add_argument('--manualSeed', type=int, default=3740, help='manual seed')
+parser.add_argument('--evl_interval',  type=int, default=400)
+parser.add_argument('--evl_start',  type=int, default=0)
+parser.add_argument('--manualSeed', type=int, default=5606, help='manual seed')
 
 parser.add_argument('--latent_dim', type=int, default=20, help='dimention of latent z')
-parser.add_argument('--gh_dim',     type=int, default=4096, help='dimention of hidden layer in decoder')
-parser.add_argument('--eh_dim',     type=int, default=4096, help='dimention of hidden layer in encoder')
 parser.add_argument('--q_z_nn_output_dim', type=int, default=128, help='dimention of hidden layer in encoder')
-parser.add_argument('--S_dim', type=int, default=312)
-parser.add_argument('--NS_dim', type=int, default=312)
-parser.add_argument('--zsl', default=True)
+parser.add_argument('--S_dim', type=int, default=1024)
+parser.add_argument('--NS_dim', type=int, default=1024)
 
-parser.add_argument('--gpu', default='2', type=str, help='index of GPU to use')
+parser.add_argument('--gpu', default='0', type=str, help='index of GPU to use')
 opt = parser.parse_args()
 
 if opt.manualSeed is None:
@@ -73,8 +78,9 @@ def train():
     opt.X_dim = dataset.feature_dim
     opt.Z_dim = opt.latent_dim
     opt.y_dim = dataset.ntrain_class
-    out_dir = 'out/{}/b-{}_g-{}_lr-{}_ds-{}__nS-{}_nZ-{}_bs-{}_gh-{}_eh-{}'.format(opt.dataset, opt.beta, opt.ga, opt.lr,
-                            opt.S_dim, opt.nSample, opt.Z_dim, opt.batchsize, opt.gh_dim, opt.eh_dim)
+    out_dir = 'out/{}/wd-{}_b-{}_g-{}_lr-{}_sd-{}_dis-{}_nS-{}_nZ-{}_bs-{}'.format(opt.dataset, opt.weight_decay,
+                    opt.beta, opt.ga, opt.lr,
+                            opt.S_dim, opt.dis, opt.nSample, opt.Z_dim, opt.batchsize)
     os.makedirs(out_dir, exist_ok=True)
     print("The output dictionary is {}".format(out_dir))
 
@@ -110,21 +116,21 @@ def train():
     optimizer = optim.Adam(model.parameters(), lr=opt.lr, weight_decay=opt.weight_decay)
     relation_optimizer = optim.Adam(relationNet.parameters(), lr=opt.lr, weight_decay=opt.weight_decay)
     dis_optimizer = optim.Adam(discriminator.parameters(), lr=opt.lr, weight_decay=opt.weight_decay)
-    ae_optimizer =  optim.Adam(ae.parameters(), lr=opt.lr, weight_decay=opt.weight_decay)
+    ae_optimizer = optim.Adam(ae.parameters(), lr=opt.lr, weight_decay=opt.weight_decay)
     ones = torch.ones(opt.batchsize, dtype=torch.long, device=opt.gpu)
     zeros = torch.zeros(opt.batchsize, dtype=torch.long, device=opt.gpu)
     mse = nn.MSELoss().to(opt.gpu)
 
-    import math
+
     iters = math.ceil(dataset.ntrain/opt.batchsize)
     beta = 0.01
-    gamma = 0.0
     coin = 0
+    gamma = 0
     for it in range(start_step, opt.niter+1):
 
         if it % iters == 0:
-            beta = min(0.02*(it/iters), 1)
-            gamma = min(0.001 * (it / iters), 1)
+            beta = min(opt.kl_warmup*(it/iters), 1)
+            gamma = min(opt.tc_warmup * (it / iters), 1)
 
         blobs = data_layer.forward()
         feat_data = blobs['data']
@@ -147,8 +153,10 @@ def train():
             index = np.argwhere(sample_labels == label)
             re_batch_labels.append(index[0][0])
         re_batch_labels = torch.LongTensor(re_batch_labels)
-        one_hot_labels = torch.tensor(
-            torch.zeros(opt.batchsize, sample_C_n).scatter_(1, re_batch_labels.view(-1, 1), 1)).to(opt.gpu)
+        one_hot_labels = torch.zeros(opt.batchsize, sample_C_n).scatter_(1, re_batch_labels.view(-1, 1), 1).to(opt.gpu)
+
+        # one_hot_labels = torch.tensor(
+        #     torch.zeros(opt.batchsize, sample_C_n).scatter_(1, re_batch_labels.view(-1, 1), 1)).to(opt.gpu)
 
         x1, h1, hs1, hn1 = ae(x_mean)
         relations = relationNet(hs1, sample_C)
@@ -165,13 +173,12 @@ def train():
         rec = mse(x1, X) + mse(x2, X)
         if coin > 0:
             s_score = discriminator(h1)
-            tc_loss = opt.beta*gamma * ((s_score[:, :1] - s_score[:, 1:]).mean())
+            tc_loss = opt.beta * gamma *((s_score[:, :1] - s_score[:, 1:]).mean())
             s_score = discriminator(h2)
-            tc_loss = tc_loss + opt.beta* gamma * ((s_score[:, :1] - s_score[:, 1:]).mean())
+            tc_loss = tc_loss + opt.beta * gamma* ((s_score[:, :1] - s_score[:, 1:]).mean())
 
             loss = loss + p_loss + rec + tc_loss
             coin -= 1
-
         else:
             s, n = permute_dims(hs1, hn1)
             b = torch.cat((s, n), 1).detach()
@@ -190,8 +197,7 @@ def train():
             dis_optimizer.step()
 
             loss = loss + p_loss + rec
-            coin += 2
-
+            coin += opt.dis_step
         optimizer.zero_grad()
         relation_optimizer.zero_grad()
         ae_optimizer.zero_grad()
@@ -207,7 +213,7 @@ def train():
                                              opt.niter, loss.item(),kl.item(),p_loss.item(),rec.item(), tc_loss.item(), gamma)
             log_print(log_text, log_dir)
 
-        if it % opt.evl_interval == 0 and it > 0: #15000
+        if it % opt.evl_interval == 0 and it > opt.evl_start:
             model.eval()
             ae.eval()
             gen_feat, gen_label = synthesize_feature_test(model, ae, dataset, opt)
@@ -218,13 +224,10 @@ def train():
 
             train_X = torch.cat((train_feature, gen_feat), 0)
             train_Y = torch.cat((dataset.train_label, gen_label + dataset.ntrain_class), 0)
-
-
             if opt.zsl:
-
                 """ZSL"""
                 cls = classifier.CLASSIFIER(opt, gen_feat, gen_label, dataset, test_seen_feature, test_unseen_feature,
-                                            dataset.ntrain_class + dataset.ntest_class, True, 0.004, 0.5, 20,
+                                            dataset.ntrain_class + dataset.ntest_class, True, opt.classifier_lr, 0.5, 20,
                                             opt.nSample, False)
                 result_zsl_soft.update(it, cls.acc)
                 log_print("ZSL Softmax:", log_dir)
@@ -233,9 +236,9 @@ def train():
 
             else:
                 """ GZSL"""
-                """ GZSL"""
                 cls = classifier.CLASSIFIER(opt, train_X, train_Y, dataset, test_seen_feature, test_unseen_feature,
-                                    dataset.ntrain_class + dataset.ntest_class, True, opt.classifier_lr, 0.5, 20, opt.nSample, True)
+                                    dataset.ntrain_class + dataset.ntest_class, True, opt.classifier_lr, 0.5,
+                                            opt.classifier_steps, opt.nSample, True)
 
                 result_gzsl_soft.update_gzsl(it, cls.acc_seen, cls.acc_unseen, cls.H)
 
@@ -252,44 +255,43 @@ def train():
                                out_dir + '/Best_model_GZSL_H_{:.2f}_S_{:.2f}_U_{:.2f}.tar'.format(result_gzsl_soft.best_acc,
                                                                                                  result_gzsl_soft.best_acc_S_T,
                                                                                                  result_gzsl_soft.best_acc_U_T))
-                ###############################################################################################################
+            ###############################################################################################################
 
-                # retrieval code
-                cls_centrild = np.zeros((dataset.ntest_class, opt.S_dim))
-                for i in range(dataset.ntest_class):
-                    cls_centrild[i] = torch.mean(gen_feat[gen_label == i,], dim=0)
-                dist = cosine_similarity(cls_centrild, test_unseen_feature)
+            # retrieval code
+            cls_centrild = np.zeros((dataset.ntest_class, opt.S_dim))
+            for i in range(dataset.ntest_class):
+                cls_centrild[i] = torch.mean(gen_feat[gen_label == i,], dim=0)
+            dist = cosine_similarity(cls_centrild, test_unseen_feature)
 
-                precision_100 = torch.zeros(dataset.ntest_class)
-                precision_50 = torch.zeros(dataset.ntest_class)
-                precision_25 = torch.zeros(dataset.ntest_class)
+            precision_100 = torch.zeros(dataset.ntest_class)
+            precision_50 = torch.zeros(dataset.ntest_class)
+            precision_25 = torch.zeros(dataset.ntest_class)
 
-                dist = torch.from_numpy(-dist)
-                for i in range(dataset.ntest_class):
-                    is_class = dataset.test_unseen_label == i
-                    # print(is_class.sum())
-                    cls_num = int(is_class.sum())
+            dist = torch.from_numpy(-dist)
+            for i in range(dataset.ntest_class):
+                is_class = dataset.test_unseen_label == i
+                # print(is_class.sum())
+                cls_num = int(is_class.sum())
 
-                    # 100%
-                    _, idx = torch.topk(dist[i, :], cls_num, largest=False)
-                    precision_100[i] = (is_class[idx]).sum().float() / cls_num
+                # 100%
+                _, idx = torch.topk(dist[i, :], cls_num, largest=False)
+                precision_100[i] = (is_class[idx]).sum().float() / cls_num
 
-                    # 50%
-                    cls_num_50 = int(cls_num / 2)
-                    _, idx = torch.topk(dist[i, :], cls_num_50, largest=False)
-                    precision_50[i] = (is_class[idx]).sum().float() / cls_num_50
+                # 50%
+                cls_num_50 = int(cls_num / 2)
+                _, idx = torch.topk(dist[i, :], cls_num_50, largest=False)
+                precision_50[i] = (is_class[idx]).sum().float() / cls_num_50
 
-                    # 25%
-                    cls_num_25 = int(cls_num / 4)
-                    _, idx = torch.topk(dist[i, :], cls_num_25, largest=False)
-                    precision_25[i] = (is_class[idx]).sum().float() / cls_num_25
-                print("retrieval results 100%%: %.3f 50%%: %.3f 25%%: %.3f" % (precision_100.mean().item(),
-                                                                               precision_50.mean().item(),
-                                                                               precision_25.mean().item()))
-                ###############################################################################################################
+                # 25%
+                cls_num_25 = int(cls_num / 4)
+                _, idx = torch.topk(dist[i, :], cls_num_25, largest=False)
+                precision_25[i] = (is_class[idx]).sum().float() / cls_num_25
+            print("retrieval results 100%%: %.3f 50%%: %.3f 25%%: %.3f" % (precision_100.mean().item(),
+                                                                           precision_50.mean().item(),
+                                                                           precision_25.mean().item()))
+            ###############################################################################################################
             model.train()
             ae.train()
-
         if it % opt.save_interval == 0 and it:
             save_model(it, model, opt.manualSeed, log_text,
                        out_dir + '/Iter_{:d}.tar'.format(it))

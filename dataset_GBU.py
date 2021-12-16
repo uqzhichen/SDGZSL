@@ -9,15 +9,16 @@ def map_label(label, classes):
         mapped_label[label == classes[i]] = i
     return mapped_label
 
+
 class DATA_LOADER(object):
     def __init__(self, opt):
         self.finetune = opt.finetune
-        if opt.dataset in ['FLO','CUB']:
+        if opt.dataset in ['FLO_EPGN','CUB_STC']:
             if self.finetune:
                 self.read_fine_tune(opt)
             else:
                 self.read(opt)
-        else:
+        elif opt.dataset in ['CUB', 'AWA2', 'APY', 'FLO', 'SUN']:
             self.read_matdataset(opt)
         self.index_in_epoch = 0
         self.epochs_completed = 0
@@ -29,6 +30,10 @@ class DATA_LOADER(object):
             self.tr_cls_centroid[i] = np.mean(self.train_feature[self.train_label == i].numpy(), axis=0)
 
     def read_fine_tune(self,opt):
+        if opt.dataset == "CUB_STC":
+            opt.dataset = "CUB"
+        if opt.dataset == "FLO_EPGN":
+            opt.dataset = "FLO"
 
         # matcontent = sio.loadmat(opt.dataroot + "/" + opt.dataset + "/" + opt.image_embedding + ".mat")
         # feature = matcontent['features'].T
@@ -56,26 +61,21 @@ class DATA_LOADER(object):
         self.attribute = torch.from_numpy(attribute).float()
         self.train_att = seen_pro.astype(np.float32)
         self.test_att = unseen_pro.astype(np.float32)
-        if not opt.validation:
-            scaler = preprocessing.MinMaxScaler()
-            _train_feature = scaler.fit_transform(feature[trainval_loc])
-            _test_seen_feature = scaler.transform(feature[test_seen_loc])
-            _test_unseen_feature = scaler.transform(feature[test_unseen_loc])
-            self.train_feature = torch.from_numpy(_train_feature).float()
-            mx = self.train_feature.max()
-            self.train_feature.mul_(1 / mx)
-            self.train_label = torch.from_numpy(label[trainval_loc]).long()
-            self.test_unseen_feature = torch.from_numpy(_test_unseen_feature).float()
-            self.test_unseen_feature.mul_(1 / mx)
-            self.test_unseen_label = torch.from_numpy(label[test_unseen_loc]).long()
-            self.test_seen_feature = torch.from_numpy(_test_seen_feature).float()
-            self.test_seen_feature.mul_(1 / mx)
-            self.test_seen_label = torch.from_numpy(label[test_seen_loc]).long()
-        else:
-            self.train_feature = torch.from_numpy(feature[train_loc]).float()
-            self.train_label = torch.from_numpy(label[train_loc]).long()
-            self.test_unseen_feature = torch.from_numpy(feature[val_unseen_loc]).float()
-            self.test_unseen_label = torch.from_numpy(label[val_unseen_loc]).long()
+
+        scaler = preprocessing.MinMaxScaler()
+        _train_feature = scaler.fit_transform(feature[trainval_loc])
+        _test_seen_feature = scaler.transform(feature[test_seen_loc])
+        _test_unseen_feature = scaler.transform(feature[test_unseen_loc])
+        self.train_feature = torch.from_numpy(_train_feature).float()
+        mx = self.train_feature.max()
+        self.train_feature.mul_(1 / mx)
+        self.train_label = torch.from_numpy(label[trainval_loc]).long()
+        self.test_unseen_feature = torch.from_numpy(_test_unseen_feature).float()
+        self.test_unseen_feature.mul_(1 / mx)
+        self.test_unseen_label = torch.from_numpy(label[test_unseen_loc]).long()
+        self.test_seen_feature = torch.from_numpy(_test_seen_feature).float()
+        self.test_seen_feature.mul_(1 / mx)
+        self.test_seen_label = torch.from_numpy(label[test_seen_loc]).long()
 
         self.seenclasses = torch.from_numpy(np.unique(self.train_label.numpy()))
         self.unseenclasses = torch.from_numpy(np.unique(self.test_unseen_label.numpy()))
@@ -93,6 +93,10 @@ class DATA_LOADER(object):
         self.test_att = self.attribute[self.unseenclasses].numpy()
 
     def read(self, opt):
+        if opt.dataset == "CUB_STC":
+            opt.dataset = "CUB"
+        if opt.dataset == "FLO_EPGN":
+            opt.dataset = "FLO"
 
         matcontent = sio.loadmat(opt.dataroot + "/" + opt.dataset + "/data.mat")
         train_att = matcontent['att_train']
@@ -160,6 +164,10 @@ class DATA_LOADER(object):
         test_seen_loc = matcontent['test_seen_loc'].squeeze() - 1
         test_unseen_loc = matcontent['test_unseen_loc'].squeeze() - 1
         self.attribute = torch.from_numpy(matcontent['att'].T).float()
+        # if opt.dataset == "FLO":
+        #     temp_norm = torch.norm(self.attribute, p=2, dim=1).unsqueeze(1).expand_as(self.attribute)
+        #     self.attribute = self.attribute.div(temp_norm + 1e-5)
+
         #
         #
         # matcontent = sio.loadmat(opt.dataroot + "/" + opt.dataset + "/data.mat")
@@ -172,26 +180,20 @@ class DATA_LOADER(object):
         # self.train_att = seen_pro.astype(np.float32)
         # self.test_att = unseen_pro.astype(np.float32)
 
-        if not opt.validation:
-            scaler = preprocessing.MinMaxScaler()
-            _train_feature = scaler.fit_transform(feature[trainval_loc])
-            _test_seen_feature = scaler.transform(feature[test_seen_loc])
-            _test_unseen_feature = scaler.transform(feature[test_unseen_loc])
-            self.train_feature = torch.from_numpy(_train_feature).float()
-            mx = self.train_feature.max()
-            self.train_feature.mul_(1 / mx)
-            self.train_label = torch.from_numpy(label[trainval_loc]).long()
-            self.test_unseen_feature = torch.from_numpy(_test_unseen_feature).float()
-            self.test_unseen_feature.mul_(1 / mx)
-            self.test_unseen_label = torch.from_numpy(label[test_unseen_loc]).long()
-            self.test_seen_feature = torch.from_numpy(_test_seen_feature).float()
-            self.test_seen_feature.mul_(1 / mx)
-            self.test_seen_label = torch.from_numpy(label[test_seen_loc]).long()
-        else:
-            self.train_feature = torch.from_numpy(feature[train_loc]).float()
-            self.train_label = torch.from_numpy(label[train_loc]).long()
-            self.test_unseen_feature = torch.from_numpy(feature[val_unseen_loc]).float()
-            self.test_unseen_label = torch.from_numpy(label[val_unseen_loc]).long()
+        scaler = preprocessing.MinMaxScaler()
+        _train_feature = scaler.fit_transform(feature[trainval_loc])
+        _test_seen_feature = scaler.transform(feature[test_seen_loc])
+        _test_unseen_feature = scaler.transform(feature[test_unseen_loc])
+        self.train_feature = torch.from_numpy(_train_feature).float()
+        mx = self.train_feature.max()
+        self.train_feature.mul_(1 / mx)
+        self.train_label = torch.from_numpy(label[trainval_loc]).long()
+        self.test_unseen_feature = torch.from_numpy(_test_unseen_feature).float()
+        self.test_unseen_feature.mul_(1 / mx)
+        self.test_unseen_label = torch.from_numpy(label[test_unseen_loc]).long()
+        self.test_seen_feature = torch.from_numpy(_test_seen_feature).float()
+        self.test_seen_feature.mul_(1 / mx)
+        self.test_seen_label = torch.from_numpy(label[test_seen_loc]).long()
 
         self.seenclasses = torch.from_numpy(np.unique(self.train_label.numpy()))
         self.unseenclasses = torch.from_numpy(np.unique(self.test_unseen_label.numpy()))

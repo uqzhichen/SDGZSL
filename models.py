@@ -19,7 +19,7 @@ class VAE(nn.Module):
             nn.Linear(self.args.X_dim + self.args.C_dim, 2048),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Linear(2048, 2048),
-            nn.Dropout(0.4),
+            nn.Dropout(self.args.vae_enc_drop),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Linear(2048, self.q_z_nn_output_dim)
         )
@@ -36,14 +36,14 @@ class VAE(nn.Module):
     def create_decoder(self):
         p_x_nn = nn.Sequential(
             nn.Linear(self.z_size + self.args.C_dim, 2048),
-            nn.Dropout(0.5),
+            nn.Dropout(self.args.vae_dec_drop),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Linear(2048, 2048),
             nn.BatchNorm1d(2048, 0.8),
-            nn.Dropout(0.5),
+            nn.Dropout(self.args.vae_dec_drop),
             nn.Linear(2048, 2048),
             nn.BatchNorm1d(2048, 0.8),
-            nn.Dropout(0.5),
+            nn.Dropout(self.args.vae_dec_drop),
             nn.LeakyReLU(0.2, inplace=True)
         )
         p_x_mean = nn.Sequential(
@@ -98,15 +98,15 @@ class AE(nn.Module):
         self.encoder = nn.Sequential(
             nn.Linear(args.X_dim, args.S_dim + args.NS_dim),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.2)
+            nn.Dropout(args.ae_drop)
         )
         self.decoder = nn.Sequential(
             nn.Linear(args.S_dim + args.NS_dim, 2048),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.2),
+            nn.Dropout(args.ae_drop),
             nn.Linear(2048, args.X_dim),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.2),
+            nn.Dropout(args.ae_drop),
         )
 
     def forward(self, x):
