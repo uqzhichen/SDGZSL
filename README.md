@@ -79,7 +79,7 @@ The implementation runs on
 
 ## Usage
 
-Put your [datasets](https://drive.google.com/file/d/1KxFC6T_kGKCNx1JyX2FOaSimA0DOcU_I/view?usp=sharing) in SDGZSL_data folder and run the scripts:
+Put your [datasets](https://drive.google.com/file/d/1KxFC6T_kGKCNx1JyX2FOaSimA0DOcU_I/view?usp=sharing) in SDGZSL_data folder and run the scripts in the folder.
 
 The extracted features for APY and AWA datasets are from [[1]](https://www.mpi-inf.mpg.de/departments/computer-vision-and-machine-learning/research/zero-shot-learning/feature-generating-networks-for-zero-shot-learning), 
 FLO and CUB datasets are from [[2]](https://github.com/yunlongyu/EPGN). For the fine-tuned features, AWA,FLO and CUB are from [[3]](https://github.com/akshitac8/tfvaegan). 
