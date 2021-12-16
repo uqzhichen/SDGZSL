@@ -55,8 +55,6 @@ In the paper, we followed the datasets provided in [15], in which the visual fea
 | SDGZSL     |   73.3  |   62.2  |   79.3  |   69.8  |   85.4  |    83.3 |   90.2  |    86.6 | 62.4    |   48.2  |   36.1  |   41.3  |
 | SDGZSL*    |   76.6  |   73.2  |   88.7  |   80.2  |   86.9  |    86.1 |   89.1  |    87.8 | 65.2    |   51.1  |   40.2  |   45.0  |
 
-69.36 61.62 79.32
-
 
 ## TODO
 - <del> Results on CUB with attributes </del>
