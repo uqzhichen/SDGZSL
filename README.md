@@ -62,7 +62,7 @@ In the paper, we followed the datasets provided in [15], in which the visual fea
 - <del> Results on CUB with attributes </del>
 - <del> Results on FLO without normalization </del>
 - <del> Results on SUN </del>
-- Release the code of supplementary experiments
+- <del> Release the code of supplementary experiments </del>
 
 ## Requirements
 The implementation runs on
